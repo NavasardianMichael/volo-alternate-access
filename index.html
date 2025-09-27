@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Access for Breakthrough Execution</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <img src="https://www.gapinternational.com/ResourcePackages/GapInternationalResourcePackage/assets/dist/images/svg/gap-logo-white.svg" 
+                 alt="Gap International" 
+                 class="logo">
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="form-container">
+            <h1 class="main-title">
+                Project Access for<br />
+                Breakthrough Execution
+            </h1>
+            
+            <form id="courseForm" class="form">
+                <!-- First Course Selection -->
+                <div class="form-group">
+                    <label for="courseSelect" class="form-label">Select:</label>
+                    <div class="select-container">
+                        <div class="custom-select" id="courseSelect">
+                            <div class="select-trigger">
+                                <span class="select-value" data-placeholder="Course / Program">Course / Program</span>
+                                <svg class="select-icon" width="8" height="5" viewBox="0 0 8 5" fill="none">
+                                    <path d="M4 5L0 0H8L4 5Z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="select-content" id="courseOptions">
+                                <div class="select-item" data-value="Breakthrough Execution Program">Breakthrough Execution Program</div>
+                                <div class="select-item" data-value="Breakthrough Intensive">Breakthrough Intensive</div>
+                                <div class="select-item" data-value="Executive Challenge Course">Executive Challenge Course</div>
+                                <div class="select-item" data-value="Executive Mastery">Executive Mastery</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Individual Selection -->
+                <div class="form-group">
+                    <label for="individualSelect" class="form-label">Select:</label>
+                    <div class="select-container">
+                        <div class="custom-select searchable-select" id="individualSelect">
+                            <div class="select-trigger disabled">
+                                <input type="text" class="select-search" placeholder="Select course first" disabled>
+                                <span class="select-value-display" data-placeholder="Select course first">Select course first</span>
+                                <svg class="select-icon" width="8" height="5" viewBox="0 0 8 5" fill="none">
+                                    <path d="M4 5L0 0H8L4 5Z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="select-content searchable-content" id="individualOptions">
+                                <div class="no-results">No individuals available</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" class="submit-button" id="submitButton" disabled>
+                        SUBMIT
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="copyright">© Gap International</p>
+            <div class="footer-links">
+                <a href="#" class="footer-link">Terms of Use</a>
+                <span class="footer-separator">|</span>
+                <a href="#" class="footer-link">Privacy Statement</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Hidden selected values for form submission -->
+    <input type="hidden" id="selectedCourse" name="selectedCourse">
+    <input type="hidden" id="selectedIndividual" name="selectedIndividual">
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
