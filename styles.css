@@ -1,17 +1,17 @@
 /* CSS Variables */
-:root {
-  --font-size: 16px;
-  --background: #ffffff;
-  --foreground: #2c3e50;
-  --primary: #228477;
-  --secondary: #59315f;
-  --muted-foreground: #6c757d;
-  --border: #e9ecef;
-  --input-background: #ffffff;
-  --hover-bg: #f5f5f5;
-  --disabled-bg: #9a7d9f;
-  --hover-secondary: #7a4d7f;
-  --border-gray: #9ca3af;
+#alternate-access-app {
+  --alt-access_font-size: 16px;
+  --alt-access_background: #ffffff;
+  --alt-access_foreground: #2c3e50;
+  --alt-access_primary: #228477;
+  --alt-access_secondary: #59315f;
+  --alt-access_muted-foreground: #6c757d;
+  --alt-access_border: #e9ecef;
+  --alt-access_input-background: #ffffff;
+  --alt-access_hover-bg: #f5f5f5;
+  --alt-access_disabled-bg: #9a7d9f;
+  --alt-access_hover-secondary: #7a4d7f;
+  --alt-access_border-gray: #9ca3af;
 }
 
 /* Reset and Base Styles */
@@ -24,18 +24,18 @@
 body {
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     system-ui, sans-serif;
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--alt-access_background);
+  color: var(--alt-access_foreground);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-size: var(--font-size);
+  font-size: var(--alt-access_font-size);
   line-height: 1.5;
 }
 
 /* Header */
 .header {
-  background-color: var(--primary);
+  background-color: var(--alt-access_primary);
   color: white;
   padding: 1.5rem;
 }
@@ -110,8 +110,8 @@ body {
   gap: 0.5rem;
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-gray);
-  background-color: var(--input-background);
+  border: 1px solid var(--alt-access_border-gray);
+  background-color: var(--alt-access_input-background);
   font-size: 0.875rem;
   min-height: 2.25rem;
   cursor: pointer;
@@ -119,7 +119,7 @@ body {
 }
 
 .select-trigger:hover:not(.disabled) {
-  background-color: var(--hover-bg);
+  background-color: var(--alt-access_hover-bg);
 }
 
 .select-trigger.disabled {
@@ -130,21 +130,21 @@ body {
 .select-value {
   flex: 1;
   text-align: left;
-  color: var(--muted-foreground);
+  color: var(--alt-access_muted-foreground);
 }
 
 .select-value.has-value {
-  color: var(--foreground);
+  color: var(--alt-access_foreground);
 }
 
 .select-value-display {
   flex: 1;
   text-align: left;
-  color: var(--muted-foreground);
+  color: var(--alt-access_muted-foreground);
 }
 
 .select-value-display.has-value {
-  color: var(--foreground);
+  color: var(--alt-access_foreground);
 }
 
 .select-search {
@@ -153,12 +153,12 @@ body {
   outline: none;
   background: transparent;
   font-size: 0.875rem;
-  color: var(--foreground);
+  color: var(--alt-access_foreground);
   font-family: inherit;
 }
 
 .select-search::placeholder {
-  color: var(--muted-foreground);
+  color: var(--alt-access_muted-foreground);
 }
 
 .select-search:disabled {
@@ -170,7 +170,7 @@ body {
   flex-shrink: 0;
   width: 0.75rem;
   height: 0.75rem;
-  color: var(--muted-foreground);
+  color: var(--alt-access_muted-foreground);
 }
 
 /* Select Content */
@@ -180,7 +180,7 @@ body {
   left: 0;
   right: 0;
   background-color: white;
-  border: 1px solid var(--border);
+  border: 1px solid var(--alt-access_border);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
   z-index: 1000;
@@ -205,11 +205,11 @@ body {
 }
 
 .select-item:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--alt-access_hover-bg);
 }
 
 .select-item.selected {
-  background-color: var(--hover-bg);
+  background-color: var(--alt-access_hover-bg);
 }
 
 .select-item.selected::after {
@@ -217,13 +217,13 @@ body {
   position: absolute;
   right: 0.5rem;
   font-size: 1rem;
-  color: var(--foreground);
+  color: var(--alt-access_foreground);
 }
 
 .no-results {
   padding: 0.375rem 0.5rem 0.5rem 0.5rem;
   font-size: 0.875rem;
-  color: var(--muted-foreground);
+  color: var(--alt-access_muted-foreground);
   text-align: left;
 }
 
@@ -233,7 +233,7 @@ body {
 }
 
 .select-content::-webkit-scrollbar-track {
-  background: var(--hover-bg);
+  background: var(--alt-access_hover-bg);
 }
 
 .select-content::-webkit-scrollbar-thumb {
@@ -251,7 +251,7 @@ body {
 }
 
 .submit-button {
-  background-color: var(--secondary);
+  background-color: var(--alt-access_secondary);
   color: white;
   border: none;
   padding: 0.75rem 4rem;
@@ -266,11 +266,11 @@ body {
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: var(--hover-secondary);
+  background-color: var(--alt-access_hover-secondary);
 }
 
 .submit-button:disabled {
-  background-color: var(--disabled-bg);
+  background-color: var(--alt-access_disabled-bg);
   cursor: not-allowed;
 }
 
@@ -361,17 +361,17 @@ body {
 
 /* Focus Styles for Accessibility */
 .select-trigger:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--alt-access_primary);
   outline-offset: 2px;
 }
 
 .select-item:focus {
-  background-color: var(--hover-bg);
+  background-color: var(--alt-access_hover-bg);
   outline: none;
 }
 
 .submit-button:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--alt-access_primary);
   outline-offset: 2px;
 }
 

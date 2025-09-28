@@ -458,6 +458,7 @@ $(document).ready(function () {
   let selectedIndividual = ''
   let filteredPeople = []
   let searchMode = false
+  let searchDebounceTimer = null
 
   // Initialize the application
   function init() {
@@ -495,7 +496,16 @@ $(document).ready(function () {
     // Individual search input
     $('#individualSelect').on('input', '.select-search', function () {
       const searchTerm = $(this).val().toLowerCase()
-      filterIndividuals(searchTerm)
+
+      // Clear existing timer
+      if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer)
+      }
+
+      // Set new timer for debounced search
+      searchDebounceTimer = setTimeout(function () {
+        filterIndividuals(searchTerm)
+      }, 500)
     })
 
     // Individual option selection
@@ -622,6 +632,12 @@ $(document).ready(function () {
 
       trigger.removeClass('search-mode')
       search.val('')
+
+      // Clear any pending search debounce timer
+      if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer)
+        searchDebounceTimer = null
+      }
 
       // If no selection was made, reset the display
       if (!selectedIndividual) {
