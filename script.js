@@ -453,11 +453,17 @@ $(document).ready(function () {
     },
   ]
 
-  // Global state
-  let selectedCourse = ''
-  let selectedIndividual = ''
-  let filteredPeople = []
-  let searchMode = false
+  // Container element for scoped DOM selection
+  const $container = $('#alternate-access-app')
+
+  // Application state
+  const appState = {
+    selectedCourse: '',
+    selectedIndividual: '',
+    filteredPeople: [],
+    searchMode: false,
+  }
+
   let searchDebounceTimer = null
 
   // Initialize the application
@@ -469,62 +475,64 @@ $(document).ready(function () {
   // Set up all event listeners
   function setupEventListeners() {
     // Course selection
-    $('#courseSelect').on('click', function (e) {
+    $container.find('#courseSelect').on('click', function (e) {
       e.stopPropagation()
       toggleDropdown('courseOptions')
     })
 
     // Course option selection
-    $('#courseOptions').on('click', '.select-item', function (e) {
+    $container.find('#courseOptions').on('click', '.select-item', function (e) {
       e.stopPropagation()
       const value = $(this).data('value')
       selectCourse(value)
     })
 
     // Individual selection
-    $('#individualSelect').on(
-      'click',
-      '.select-trigger:not(.disabled)',
-      function (e) {
+    $container
+      .find('#individualSelect')
+      .on('click', '.select-trigger:not(.disabled)', function (e) {
         e.stopPropagation()
-        if (!searchMode) {
+        if (!appState.searchMode) {
           activateSearchMode()
         }
-      }
-    )
+      })
 
     // Individual search input
-    $('#individualSelect').on('input', '.select-search', function () {
-      const searchTerm = $(this).val().toLowerCase()
+    $container
+      .find('#individualSelect')
+      .on('input', '.select-search', function () {
+        const searchTerm = $(this).val().toLowerCase()
 
-      // Clear existing timer
-      if (searchDebounceTimer) {
-        clearTimeout(searchDebounceTimer)
-      }
+        // Clear existing timer
+        if (searchDebounceTimer) {
+          clearTimeout(searchDebounceTimer)
+        }
 
-      // Set new timer for debounced search
-      searchDebounceTimer = setTimeout(function () {
-        filterIndividuals(searchTerm)
-      }, 500)
-    })
+        // Set new timer for debounced search
+        searchDebounceTimer = setTimeout(function () {
+          filterIndividuals(searchTerm)
+        }, 500)
+      })
 
     // Individual option selection
-    $('#individualOptions').on('click', '.select-item', function (e) {
-      e.stopPropagation()
-      const personId = $(this).data('value')
-      selectIndividual(personId)
-    })
+    $container
+      .find('#individualOptions')
+      .on('click', '.select-item', function (e) {
+        e.stopPropagation()
+        const personId = $(this).data('value')
+        selectIndividual(personId)
+      })
 
     // Close dropdowns when clicking outside
     $(document).on('click', function (e) {
-      if (!$(e.target).closest('.custom-select').length) {
+      if (!$(e.target).closest($container).length) {
         closeAllDropdowns()
         deactivateSearchMode()
       }
     })
 
-    // Form submission
-    $('#courseForm').on('submit', function (e) {
+    // Form submission - changed from form submit to button click
+    $container.find('#submitButton').on('click', function (e) {
       e.preventDefault()
       handleSubmit()
     })
@@ -540,7 +548,7 @@ $(document).ready(function () {
 
   // Toggle dropdown visibility
   function toggleDropdown(dropdownId) {
-    const dropdown = $('#' + dropdownId)
+    const dropdown = $container.find('#' + dropdownId)
     const isOpen = dropdown.hasClass('open')
 
     closeAllDropdowns()
@@ -552,28 +560,30 @@ $(document).ready(function () {
 
   // Close all dropdowns
   function closeAllDropdowns() {
-    $('.select-content').removeClass('open')
+    $container.find('.select-content').removeClass('open')
   }
 
   // Select a course
   function selectCourse(course) {
-    selectedCourse = course
+    appState.selectedCourse = course
 
     // Update course display
-    $('#courseSelect .select-value').text(course).addClass('has-value')
+    $container
+      .find('#courseSelect .select-value')
+      .text(course)
+      .addClass('has-value')
 
     // Filter people for this course
-    filteredPeople = mockPeople.filter((person) => person.courseName === course)
+    appState.filteredPeople = mockPeople.filter(
+      (person) => person.courseName === course
+    )
 
     // Reset individual selection
-    selectedIndividual = ''
+    appState.selectedIndividual = ''
     resetIndividualSelect()
 
     // Enable individual select
     enableIndividualSelect()
-
-    // Update hidden input
-    $('#selectedCourse').val(course)
 
     // Close dropdown
     closeAllDropdowns()
@@ -584,21 +594,19 @@ $(document).ready(function () {
 
   // Reset individual select to initial state
   function resetIndividualSelect() {
-    const trigger = $('#individualSelect .select-trigger')
+    const trigger = $container.find('#individualSelect .select-trigger')
     const display = trigger.find('.select-value-display')
     const search = trigger.find('.select-search')
 
     display.text('Individual').removeClass('has-value')
     search.val('').prop('placeholder', 'Begin typing to search')
 
-    $('#selectedIndividual').val('')
-
-    populateIndividualOptions(filteredPeople)
+    populateIndividualOptions(appState.filteredPeople)
   }
 
   // Enable individual select
   function enableIndividualSelect() {
-    const trigger = $('#individualSelect .select-trigger')
+    const trigger = $container.find('#individualSelect .select-trigger')
     const search = trigger.find('.select-search')
 
     trigger.removeClass('disabled')
@@ -610,24 +618,24 @@ $(document).ready(function () {
 
   // Activate search mode for individual select
   function activateSearchMode() {
-    if (selectedCourse && !searchMode) {
-      searchMode = true
-      const trigger = $('#individualSelect .select-trigger')
+    if (appState.selectedCourse && !appState.searchMode) {
+      appState.searchMode = true
+      const trigger = $container.find('#individualSelect .select-trigger')
       const search = trigger.find('.select-search')
 
       trigger.addClass('search-mode')
       search.focus()
 
       toggleDropdown('individualOptions')
-      populateIndividualOptions(filteredPeople)
+      populateIndividualOptions(appState.filteredPeople)
     }
   }
 
   // Deactivate search mode
   function deactivateSearchMode() {
-    if (searchMode) {
-      searchMode = false
-      const trigger = $('#individualSelect .select-trigger')
+    if (appState.searchMode) {
+      appState.searchMode = false
+      const trigger = $container.find('#individualSelect .select-trigger')
       const search = trigger.find('.select-search')
 
       trigger.removeClass('search-mode')
@@ -640,20 +648,18 @@ $(document).ready(function () {
       }
 
       // If no selection was made, reset the display
-      if (!selectedIndividual) {
-        populateIndividualOptions(filteredPeople)
+      if (!appState.selectedIndividual) {
+        populateIndividualOptions(appState.filteredPeople)
       }
     }
-  }
-
-  // Filter individuals based on search term
+  } // Filter individuals based on search term
   function filterIndividuals(searchTerm) {
     let filtered
 
     if (!searchTerm) {
-      filtered = filteredPeople
+      filtered = appState.filteredPeople
     } else {
-      filtered = filteredPeople.filter((person) => {
+      filtered = appState.filteredPeople.filter((person) => {
         const fullName = `${person.firstName} ${person.lastName}`.toLowerCase()
         const email = person.email.toLowerCase()
         return fullName.includes(searchTerm) || email.includes(searchTerm)
@@ -665,10 +671,12 @@ $(document).ready(function () {
 
   // Populate individual options dropdown
   function populateIndividualOptions(people) {
-    const container = $('#individualOptions')
+    const container = $container.find('#individualOptions')
 
     if (people.length === 0) {
-      const searchTerm = $('#individualSelect .select-search').val()
+      const searchTerm = $container
+        .find('#individualSelect .select-search')
+        .val()
       const message = searchTerm
         ? 'No people found'
         : 'No individuals available'
@@ -676,7 +684,7 @@ $(document).ready(function () {
     } else {
       let html = ''
       people.forEach((person) => {
-        const isSelected = selectedIndividual == person.id
+        const isSelected = appState.selectedIndividual == person.id
         const selectedClass = isSelected ? ' selected' : ''
         const displayText = `${person.firstName} ${person.lastName} (${person.email})`
 
@@ -688,19 +696,17 @@ $(document).ready(function () {
 
   // Select an individual
   function selectIndividual(personId) {
-    selectedIndividual = personId
+    appState.selectedIndividual = personId
 
     const person = mockPeople.find((p) => p.id == personId)
     if (person) {
       const displayText = `${person.firstName} ${person.lastName} (${person.email})`
 
       // Update display
-      $('#individualSelect .select-value-display')
+      $container
+        .find('#individualSelect .select-value-display')
         .text(displayText)
         .addClass('has-value')
-
-      // Update hidden input
-      $('#selectedIndividual').val(personId)
     }
 
     // Close dropdown and deactivate search mode
@@ -713,32 +719,32 @@ $(document).ready(function () {
 
   // Update submit button state
   function updateSubmitButton() {
-    const button = $('#submitButton')
-    const canSubmit = selectedCourse && selectedIndividual
+    const button = $container.find('#submitButton')
+    const canSubmit = appState.selectedCourse && appState.selectedIndividual
 
     button.prop('disabled', !canSubmit)
   }
 
   // Handle form submission
   function handleSubmit() {
-    if (!selectedCourse || !selectedIndividual) {
+    if (!appState.selectedCourse || !appState.selectedIndividual) {
       alert('Please make both selections.')
       return
     }
 
-    const person = mockPeople.find((p) => p.id == selectedIndividual)
+    const person = mockPeople.find((p) => p.id == appState.selectedIndividual)
     const personDisplay = person
       ? `${person.firstName} ${person.lastName} (${person.email})`
       : 'Unknown'
 
     alert(
-      `Form submitted!\nCourse: ${selectedCourse}\nIndividual: ${personDisplay}`
+      `Form submitted!\nCourse: ${appState.selectedCourse}\nIndividual: ${personDisplay}`
     )
 
     // Here you would typically send the data to a server
     console.log('Form data:', {
-      course: selectedCourse,
-      individual: selectedIndividual,
+      course: appState.selectedCourse,
+      individual: appState.selectedIndividual,
       person: person,
     })
   }

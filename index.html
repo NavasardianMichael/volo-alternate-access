@@ -29,16 +29,16 @@
 
       <!-- Main Content -->
       <main class="main-content">
-        <div class="form-container">
+        <div class="content-container">
           <h1 class="main-title">
             Project Access for<br />
             Breakthrough Execution
           </h1>
 
-          <form id="courseForm" class="form">
+          <div class="selector-wrapper">
             <!-- First Course Selection -->
-            <div class="form-group">
-              <label for="courseSelect" class="form-label">Select:</label>
+            <div class="selector-group">
+              <label for="courseSelect" class="selector-label">Select:</label>
               <div class="select-container">
                 <div class="custom-select" id="courseSelect">
                   <div class="select-trigger">
@@ -85,8 +85,8 @@
             </div>
 
             <!-- Second Individual Selection -->
-            <div class="form-group">
-              <label for="individualSelect" class="form-label">Select:</label>
+            <div class="selector-group">
+              <label for="individualSelect" class="selector-label">Select:</label>
               <div class="select-container">
                 <div
                   class="custom-select searchable-select"
@@ -125,17 +125,12 @@
             </div>
 
             <!-- Submit Button -->
-            <div class="form-actions">
-              <button
-                type="submit"
-                class="submit-button"
-                id="submitButton"
-                disabled
-              >
+            <div class="button-actions">
+              <button class="submit-button" id="submitButton" disabled>
                 SUBMIT
               </button>
             </div>
-          </form>
+          </div>
         </div>
       </main>
 
@@ -150,10 +145,6 @@
           </div>
         </div>
       </footer>
-
-      <!-- Hidden selected values for form submission -->
-      <input type="hidden" id="selectedCourse" name="selectedCourse" />
-      <input type="hidden" id="selectedIndividual" name="selectedIndividual" />
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
