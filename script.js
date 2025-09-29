@@ -456,6 +456,14 @@ $(document).ready(function () {
   // Container element for scoped DOM selection
   const $container = $('#alternate-access-app')
 
+  // Hardcoded courses data
+  const coursesData = [
+    { id: 'breakthrough-execution', name: 'Breakthrough Execution Program' },
+    { id: 'breakthrough-intensive', name: 'Breakthrough Intensive' },
+    { id: 'executive-challenge', name: 'Executive Challenge Course' },
+    { id: 'executive-mastery', name: 'Executive Mastery' },
+  ]
+
   // Application state
   const appState = {
     courses: {
@@ -471,34 +479,104 @@ $(document).ready(function () {
     isSearchActive: false,
   }
 
-  const oldAppState = {
-    selectedCourse: '',
-    selectedIndividual: '',
-    filteredPeople: [],
-    searchMode: false,
+  let searchDebounceTimer = null
+
+  // Initialize courses in state
+  function initializeCourses() {
+    coursesData.forEach((course) => {
+      appState.courses.byId[course.id] = course
+      appState.courses.allIds.push(course.id)
+    })
   }
 
-  let searchDebounceTimer = null
+  // Simulate API call to fetch individuals for a course
+  async function fetchIndividualsForCourse(courseId) {
+    // Always show loading for a minimum duration to make it visible
+    const minLoadingTime = 1000 // 1 second minimum
+    const startTime = Date.now()
+
+    // Return cached data if available
+    if (appState.individuals.allIdsByCourseId[courseId]) {
+      // Even with cached data, show loading for minimum duration
+      const elapsed = Date.now() - startTime
+      const remainingTime = Math.max(0, minLoadingTime - elapsed)
+
+      if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime))
+      }
+
+      return appState.individuals.allIdsByCourseId[courseId].map(
+        (id) => appState.individuals.byId[id]
+      )
+    }
+
+    // Simulate API delay for new data
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    // Filter mock data based on course
+    const courseNameMap = {
+      'breakthrough-execution': 'Breakthrough Execution Program',
+      'breakthrough-intensive': 'Breakthrough Intensive',
+      'executive-challenge': 'Executive Challenge Course',
+      'executive-mastery': 'Executive Mastery',
+    }
+
+    const courseName = courseNameMap[courseId]
+    const individuals = mockPeople.filter(
+      (person) => person.courseName === courseName
+    )
+
+    // Store in state
+    appState.individuals.allIdsByCourseId[courseId] = []
+    individuals.forEach((person) => {
+      appState.individuals.byId[person.id] = person
+      appState.individuals.allIdsByCourseId[courseId].push(person.id)
+    })
+
+    return individuals
+  }
 
   // Initialize the application
   function init() {
+    initializeCourses()
+    populateCourseOptions()
     setupEventListeners()
     updateSubmitButton()
   }
 
+  // Populate course options in the dropdown
+  function populateCourseOptions() {
+    const $courseContainer = $container.find('#courseOptions')
+    let html = ''
+
+    appState.courses.allIds.forEach((courseId) => {
+      const course = appState.courses.byId[courseId]
+      html += `<div class="select-item" data-value="${course.id}">${course.name}</div>`
+    })
+
+    $courseContainer.html(html)
+  }
+
   // Set up all event listeners
   function setupEventListeners() {
-    // Course selection
+    // Course selection - prevent opening when disabled
     $container.find('#courseSelect').on('click', function (e) {
       e.stopPropagation()
+
+      // Check if the trigger is disabled
+      const trigger = $(this).find('.select-trigger')
+      if (trigger.hasClass('disabled')) {
+        return // Don't open dropdown if disabled
+      }
+
       toggleDropdown('courseOptions')
     })
 
     // Course option selection
     $container.find('#courseOptions').on('click', '.select-item', function (e) {
       e.stopPropagation()
-      const value = $(this).data('value')
-      selectCourse(value)
+      const courseId = $(this).data('value')
+      selectCourse(courseId)
     })
 
     // Individual selection
@@ -506,8 +584,14 @@ $(document).ready(function () {
       .find('#individualSelect')
       .on('click', '.select-trigger:not(.disabled)', function (e) {
         e.stopPropagation()
-        if (!oldAppState.searchMode) {
+        if (!appState.isSearchActive) {
           activateSearchMode()
+        } else {
+          // If search mode is already active but dropdown is closed, open it
+          const dropdown = $container.find('#individualOptions')
+          if (!dropdown.hasClass('open')) {
+            toggleDropdown('individualOptions')
+          }
         }
       })
 
@@ -525,7 +609,7 @@ $(document).ready(function () {
         // Set new timer for debounced search
         searchDebounceTimer = setTimeout(function () {
           filterIndividuals(searchTerm)
-        }, 500)
+        }, 300)
       })
 
     // Individual option selection
@@ -590,32 +674,112 @@ $(document).ready(function () {
   }
 
   // Select a course
-  function selectCourse(course) {
-    oldAppState.selectedCourse = course
+  async function selectCourse(courseId) {
+    // Skip if the same course is already selected
+    if (appState.courses.selectedCourseId === courseId) {
+      // Just close the dropdown and return
+      closeAllDropdowns()
+      return
+    }
+
+    appState.courses.selectedCourseId = courseId
+    const course = appState.courses.byId[courseId]
 
     // Update course display
     $container
       .find('#courseSelect .select-value')
-      .text(course)
+      .text(course.name)
       .addClass('has-value')
 
-    // Filter people for this course
-    oldAppState.filteredPeople = mockPeople.filter(
-      (person) => person.courseName === course
-    )
+    // Close all dropdowns immediately
+    closeAllDropdowns()
 
     // Reset individual selection
-    oldAppState.selectedIndividual = ''
+    appState.individuals.selectedIndividualId = null
     resetIndividualSelect()
 
-    // Enable individual select
-    enableIndividualSelect()
+    // Check if data is already cached
+    const isDataCached = appState.individuals.allIdsByCourseId[courseId]
 
-    // Close dropdown
-    closeAllDropdowns()
+    if (isDataCached) {
+      // Data is cached - immediately enable and populate
+      enableIndividualSelect()
+      populateIndividualOptions()
+    } else {
+      // Data needs to be fetched - show loading state
+      showIndividualLoading()
+
+      try {
+        // Fetch individuals for this course
+        await fetchIndividualsForCourse(courseId)
+
+        // Enable individual select and populate options
+        enableIndividualSelect()
+        populateIndividualOptions()
+      } catch (error) {
+        console.error('Error fetching individuals:', error)
+        showIndividualError()
+      }
+    }
 
     // Update submit button
     updateSubmitButton()
+  }
+
+  // Show loading state for individual select
+  function showIndividualLoading() {
+    // Disable course dropdown to prevent changes during loading
+    const courseTrigger = $container.find('#courseSelect .select-trigger')
+    courseTrigger.addClass('disabled loading')
+
+    // Disable individual dropdown
+    const trigger = $container.find('#individualSelect .select-trigger')
+    const display = trigger.find('.select-value-display')
+    const search = trigger.find('.select-search')
+
+    // Disable the entire trigger and search input
+    trigger.addClass('disabled loading')
+    search.prop('disabled', true)
+
+    // Update display text with loading indicator and animation
+    display
+      .text('Loading individuals...')
+      .removeClass('has-value')
+      .addClass('loading-text')
+
+    // Show loading state in dropdown
+    const container = $container.find('#individualOptions')
+    container.html(`
+      <div class="no-results loading-message">
+        <div class="loading-spinner"></div>
+        Loading individuals...
+      </div>
+    `)
+
+    // Ensure dropdown is closed
+    container.removeClass('open')
+  }
+
+  // Show error state for individual select
+  function showIndividualError() {
+    // Re-enable course dropdown even on error
+    const courseTrigger = $container.find('#courseSelect .select-trigger')
+    courseTrigger.removeClass('disabled loading')
+
+    // Handle individual dropdown error state
+    const trigger = $container.find('#individualSelect .select-trigger')
+    const display = trigger.find('.select-value-display')
+
+    // Remove loading states and add error styling
+    trigger.removeClass('loading').addClass('error')
+    display
+      .text('Error loading individuals')
+      .removeClass('has-value loading-text')
+
+    const container = $container.find('#individualOptions')
+    container.html(
+      '<div class="no-results error-message">Error loading individuals</div>'
+    )
   }
 
   // Reset individual select to initial state
@@ -625,42 +789,54 @@ $(document).ready(function () {
     const search = trigger.find('.select-search')
 
     display.text('Individual').removeClass('has-value')
-    search.val('').prop('placeholder', 'Begin typing to search')
+    search.val('').prop('placeholder', 'Individual')
 
-    populateIndividualOptions(oldAppState.filteredPeople)
+    // Make sure we're not in search mode
+    appState.isSearchActive = false
+    trigger.removeClass('search-mode')
   }
 
   // Enable individual select
   function enableIndividualSelect() {
+    // Re-enable course dropdown
+    const courseTrigger = $container.find('#courseSelect .select-trigger')
+    courseTrigger.removeClass('disabled loading')
+
+    // Re-enable individual dropdown
     const trigger = $container.find('#individualSelect .select-trigger')
     const search = trigger.find('.select-search')
+    const display = trigger.find('.select-value-display')
 
-    trigger.removeClass('disabled')
+    // Remove disabled, loading, and error states
+    trigger.removeClass('disabled loading error')
     search.prop('disabled', false)
 
-    const display = trigger.find('.select-value-display')
-    display.text('Individual').attr('data-placeholder', 'Individual')
+    // Reset display text and remove loading classes
+    display
+      .text('Individual')
+      .removeClass('loading-text')
+      .attr('data-placeholder', 'Individual')
   }
 
   // Activate search mode for individual select
   function activateSearchMode() {
-    if (oldAppState.selectedCourse && !oldAppState.searchMode) {
-      oldAppState.searchMode = true
+    if (appState.courses.selectedCourseId && !appState.isSearchActive) {
+      appState.isSearchActive = true
       const trigger = $container.find('#individualSelect .select-trigger')
       const search = trigger.find('.select-search')
 
       trigger.addClass('search-mode')
-      search.focus()
+      search.prop('placeholder', 'Begin typing to search').focus()
 
       toggleDropdown('individualOptions')
-      populateIndividualOptions(oldAppState.filteredPeople)
+      populateIndividualOptions()
     }
   }
 
   // Deactivate search mode
   function deactivateSearchMode() {
-    if (oldAppState.searchMode) {
-      oldAppState.searchMode = false
+    if (appState.isSearchActive) {
+      appState.isSearchActive = false
       const trigger = $container.find('#individualSelect .select-trigger')
       const search = trigger.find('.select-search')
 
@@ -674,47 +850,67 @@ $(document).ready(function () {
       }
 
       // If no selection was made, reset the display
-      if (!oldAppState.selectedIndividual) {
-        populateIndividualOptions(oldAppState.filteredPeople)
+      if (!appState.individuals.selectedIndividualId) {
+        populateIndividualOptions()
       }
     }
   } // Filter individuals based on search term
+  // Filter individuals based on search term and populate dropdown
   function filterIndividuals(searchTerm) {
-    let filtered
-
-    if (!searchTerm) {
-      filtered = oldAppState.filteredPeople
-    } else {
-      filtered = oldAppState.filteredPeople.filter((person) => {
-        const fullName = `${person.firstName} ${person.lastName}`.toLowerCase()
-        const email = person.email.toLowerCase()
-        return fullName.includes(searchTerm) || email.includes(searchTerm)
-      })
-    }
-
-    populateIndividualOptions(filtered)
+    populateIndividualOptions(searchTerm)
   }
 
   // Populate individual options dropdown
-  function populateIndividualOptions(people) {
+  function populateIndividualOptions(searchTerm = '') {
     const container = $container.find('#individualOptions')
 
-    if (people.length === 0) {
-      const searchTerm = $container
-        .find('#individualSelect .select-search')
-        .val()
+    if (!appState.courses.selectedCourseId) {
+      container.html('<div class="no-results">No individuals available</div>')
+      return
+    }
+
+    const individualIds =
+      appState.individuals.allIdsByCourseId[
+        appState.courses.selectedCourseId
+      ] || []
+    let individuals = individualIds.map((id) => appState.individuals.byId[id])
+
+    // Filter by search term if provided
+    if (searchTerm) {
+      individuals = individuals.filter((person) => {
+        const fullName = `${person.firstName} ${person.lastName}`.toLowerCase()
+        const email = person.email.toLowerCase()
+        return (
+          fullName.includes(searchTerm.toLowerCase()) ||
+          email.includes(searchTerm.toLowerCase())
+        )
+      })
+    }
+
+    if (individuals.length === 0) {
       const message = searchTerm
         ? 'No people found'
         : 'No individuals available'
       container.html(`<div class="no-results">${message}</div>`)
     } else {
       let html = ''
-      people.forEach((person) => {
-        const isSelected = oldAppState.selectedIndividual == person.id
+      individuals.forEach((person) => {
+        const isSelected =
+          appState.individuals.selectedIndividualId == person.id
         const selectedClass = isSelected ? ' selected' : ''
         const displayText = `${person.firstName} ${person.lastName} (${person.email})`
+        const checkIcon = isSelected
+          ? `
+          <span class="absolute right-2 flex size-3.5 items-center justify-center">
+            <img src="checkmark.svg" alt="✓" class="size-4" />
+          </span>
+        `
+          : ''
 
-        html += `<div class="select-item${selectedClass}" data-value="${person.id}">${displayText}</div>`
+        html += `<div class="select-item${selectedClass}" data-value="${person.id}">
+          <span class="select-item-text">${displayText}</span>
+          ${checkIcon}
+        </div>`
       })
       container.html(html)
     }
@@ -722,9 +918,9 @@ $(document).ready(function () {
 
   // Select an individual
   function selectIndividual(personId) {
-    oldAppState.selectedIndividual = personId
+    appState.individuals.selectedIndividualId = personId
 
-    const person = mockPeople.find((p) => p.id == personId)
+    const person = appState.individuals.byId[personId]
     if (person) {
       const displayText = `${person.firstName} ${person.lastName} (${person.email})`
 
@@ -747,33 +943,38 @@ $(document).ready(function () {
   function updateSubmitButton() {
     const button = $container.find('#submitButton')
     const canSubmit =
-      oldAppState.selectedCourse && oldAppState.selectedIndividual
+      appState.courses.selectedCourseId &&
+      appState.individuals.selectedIndividualId
 
     button.prop('disabled', !canSubmit)
   }
 
   // Handle form submission
   function handleSubmit() {
-    if (!oldAppState.selectedCourse || !oldAppState.selectedIndividual) {
+    if (
+      !appState.courses.selectedCourseId ||
+      !appState.individuals.selectedIndividualId
+    ) {
       alert('Please make both selections.')
       return
     }
 
-    const person = mockPeople.find(
-      (p) => p.id == oldAppState.selectedIndividual
-    )
+    const course = appState.courses.byId[appState.courses.selectedCourseId]
+    const person =
+      appState.individuals.byId[appState.individuals.selectedIndividualId]
     const personDisplay = person
       ? `${person.firstName} ${person.lastName} (${person.email})`
       : 'Unknown'
 
     alert(
-      `Form submitted!\nCourse: ${oldAppState.selectedCourse}\nIndividual: ${personDisplay}`
+      `Form submitted!\nCourse: ${course.name}\nIndividual: ${personDisplay}`
     )
 
     // Here you would typically send the data to a server
     console.log('Form data:', {
-      course: oldAppState.selectedCourse,
-      individual: oldAppState.selectedIndividual,
+      courseId: appState.courses.selectedCourseId,
+      course: course,
+      individualId: appState.individuals.selectedIndividualId,
       person: person,
     })
   }
