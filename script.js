@@ -458,6 +458,20 @@ $(document).ready(function () {
 
   // Application state
   const appState = {
+    courses: {
+      byId: {},
+      allIds: [],
+      selectedCourseId: null,
+    },
+    individuals: {
+      byId: {},
+      allIdsByCourseId: {},
+      selectedIndividualId: null,
+    },
+    isSearchActive: false,
+  }
+
+  const oldAppState = {
     selectedCourse: '',
     selectedIndividual: '',
     filteredPeople: [],
@@ -492,7 +506,7 @@ $(document).ready(function () {
       .find('#individualSelect')
       .on('click', '.select-trigger:not(.disabled)', function (e) {
         e.stopPropagation()
-        if (!appState.searchMode) {
+        if (!oldAppState.searchMode) {
           activateSearchMode()
         }
       })
@@ -525,7 +539,19 @@ $(document).ready(function () {
 
     // Close dropdowns when clicking outside
     $(document).on('click', function (e) {
-      if (!$(e.target).closest($container).length) {
+      // Check if click is outside any custom-select within our container
+      const $target = $(e.target)
+      const $customSelects = $container.find('.custom-select')
+      let isOutside = true
+
+      $customSelects.each(function () {
+        if ($target.closest(this).length > 0) {
+          isOutside = false
+          return false // break the loop
+        }
+      })
+
+      if (isOutside) {
         closeAllDropdowns()
         deactivateSearchMode()
       }
@@ -565,7 +591,7 @@ $(document).ready(function () {
 
   // Select a course
   function selectCourse(course) {
-    appState.selectedCourse = course
+    oldAppState.selectedCourse = course
 
     // Update course display
     $container
@@ -574,12 +600,12 @@ $(document).ready(function () {
       .addClass('has-value')
 
     // Filter people for this course
-    appState.filteredPeople = mockPeople.filter(
+    oldAppState.filteredPeople = mockPeople.filter(
       (person) => person.courseName === course
     )
 
     // Reset individual selection
-    appState.selectedIndividual = ''
+    oldAppState.selectedIndividual = ''
     resetIndividualSelect()
 
     // Enable individual select
@@ -601,7 +627,7 @@ $(document).ready(function () {
     display.text('Individual').removeClass('has-value')
     search.val('').prop('placeholder', 'Begin typing to search')
 
-    populateIndividualOptions(appState.filteredPeople)
+    populateIndividualOptions(oldAppState.filteredPeople)
   }
 
   // Enable individual select
@@ -618,8 +644,8 @@ $(document).ready(function () {
 
   // Activate search mode for individual select
   function activateSearchMode() {
-    if (appState.selectedCourse && !appState.searchMode) {
-      appState.searchMode = true
+    if (oldAppState.selectedCourse && !oldAppState.searchMode) {
+      oldAppState.searchMode = true
       const trigger = $container.find('#individualSelect .select-trigger')
       const search = trigger.find('.select-search')
 
@@ -627,14 +653,14 @@ $(document).ready(function () {
       search.focus()
 
       toggleDropdown('individualOptions')
-      populateIndividualOptions(appState.filteredPeople)
+      populateIndividualOptions(oldAppState.filteredPeople)
     }
   }
 
   // Deactivate search mode
   function deactivateSearchMode() {
-    if (appState.searchMode) {
-      appState.searchMode = false
+    if (oldAppState.searchMode) {
+      oldAppState.searchMode = false
       const trigger = $container.find('#individualSelect .select-trigger')
       const search = trigger.find('.select-search')
 
@@ -648,8 +674,8 @@ $(document).ready(function () {
       }
 
       // If no selection was made, reset the display
-      if (!appState.selectedIndividual) {
-        populateIndividualOptions(appState.filteredPeople)
+      if (!oldAppState.selectedIndividual) {
+        populateIndividualOptions(oldAppState.filteredPeople)
       }
     }
   } // Filter individuals based on search term
@@ -657,9 +683,9 @@ $(document).ready(function () {
     let filtered
 
     if (!searchTerm) {
-      filtered = appState.filteredPeople
+      filtered = oldAppState.filteredPeople
     } else {
-      filtered = appState.filteredPeople.filter((person) => {
+      filtered = oldAppState.filteredPeople.filter((person) => {
         const fullName = `${person.firstName} ${person.lastName}`.toLowerCase()
         const email = person.email.toLowerCase()
         return fullName.includes(searchTerm) || email.includes(searchTerm)
@@ -684,7 +710,7 @@ $(document).ready(function () {
     } else {
       let html = ''
       people.forEach((person) => {
-        const isSelected = appState.selectedIndividual == person.id
+        const isSelected = oldAppState.selectedIndividual == person.id
         const selectedClass = isSelected ? ' selected' : ''
         const displayText = `${person.firstName} ${person.lastName} (${person.email})`
 
@@ -696,7 +722,7 @@ $(document).ready(function () {
 
   // Select an individual
   function selectIndividual(personId) {
-    appState.selectedIndividual = personId
+    oldAppState.selectedIndividual = personId
 
     const person = mockPeople.find((p) => p.id == personId)
     if (person) {
@@ -720,31 +746,34 @@ $(document).ready(function () {
   // Update submit button state
   function updateSubmitButton() {
     const button = $container.find('#submitButton')
-    const canSubmit = appState.selectedCourse && appState.selectedIndividual
+    const canSubmit =
+      oldAppState.selectedCourse && oldAppState.selectedIndividual
 
     button.prop('disabled', !canSubmit)
   }
 
   // Handle form submission
   function handleSubmit() {
-    if (!appState.selectedCourse || !appState.selectedIndividual) {
+    if (!oldAppState.selectedCourse || !oldAppState.selectedIndividual) {
       alert('Please make both selections.')
       return
     }
 
-    const person = mockPeople.find((p) => p.id == appState.selectedIndividual)
+    const person = mockPeople.find(
+      (p) => p.id == oldAppState.selectedIndividual
+    )
     const personDisplay = person
       ? `${person.firstName} ${person.lastName} (${person.email})`
       : 'Unknown'
 
     alert(
-      `Form submitted!\nCourse: ${appState.selectedCourse}\nIndividual: ${personDisplay}`
+      `Form submitted!\nCourse: ${oldAppState.selectedCourse}\nIndividual: ${personDisplay}`
     )
 
     // Here you would typically send the data to a server
     console.log('Form data:', {
-      course: appState.selectedCourse,
-      individual: appState.selectedIndividual,
+      course: oldAppState.selectedCourse,
+      individual: oldAppState.selectedIndividual,
       person: person,
     })
   }
